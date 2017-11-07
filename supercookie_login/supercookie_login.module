@@ -1,0 +1,62 @@
+<?php
+/*
+Run on user logout
+*/
+function supercookie_login_user_logout($account)
+{
+  global $user;
+  $supercookie = supercookie_instance();
+  db_query("INSERT INTO `supercookie_sessions` (`scid`, `uid`, `logout`) VALUES (:scid, :uid, 1) ON DUPLICATE KEY UPDATE `uid`=:uid, `logout`=1;", array(
+    ':scid' => $supercookie->data,
+    ':uid' => $user->uid
+  ));
+}
+
+/*
+Run on user login
+*/
+function supercookie_login_user_login(&$edit, $account) {
+  global $user;
+  $supercookie = supercookie_instance();
+  db_query("INSERT INTO `supercookie_sessions` (`scid`, `uid`, `logout`) VALUES (:scid, :uid, 0) ON DUPLICATE KEY UPDATE `uid`=:uid, `logout`=0;", array(
+    ':scid' => $supercookie->data,
+    ':uid' => $user->uid
+  ));
+}
+
+/*
+Run on every page load
+*/
+function supercookie_login_init()
+{
+  global $user;
+  $supercookie = supercookie_instance();
+
+  $path = isset($_GET['q']) ? $_GET['q'] : '';
+  if ($path != 'user/login' && $path != 'user/logout') // skip user login/logout pages
+  {
+    if (!$user->uid && $supercookie->data)  //Not logged in, but supercookie detected
+    {
+      $result = db_query("SELECT `uid` FROM `supercookie_sessions` WHERE `scid` = :scid AND `logout`!=1 LIMIT 1", array(
+        ':scid' => $supercookie->data
+      ));
+      $records = $result->fetchAll();
+
+      foreach ($records as $record)
+      {
+        $user = user_load($record->uid);
+        $form_state = array("uid" => $record->uid);
+        $form_state['uid'] = $record->uid;
+        user_login_submit(array(), $form_state);
+      }
+    }
+  }
+
+  if ($supercookie->data && $user->uid) // Only save if both IDs exist
+  {
+    db_query("INSERT INTO `supercookie_sessions` (`scid`, `uid`) VALUES (:scid, :uid) ON DUPLICATE KEY UPDATE `uid`=:uid;", array(
+      ':scid' => $supercookie->data,
+      ':uid' => $user->uid
+    ));
+  }
+}
