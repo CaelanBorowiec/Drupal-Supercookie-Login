@@ -10,8 +10,11 @@ if ($supercookie->uid)
   user_login_submit(array(), $form_state);
 }
 
-$result = db_query("INSERT INTO supercookie_sessions (`scid`, `uid`) VALUES (:scid, :uid) ON DUPLICATE KEY UPDATE `uid`=:uid;", array(
-  ':scid' => $supercookie->data,
-  ':uid' => $supercookie->uid
-));
+if ($supercookie->data && $supercookie->uid) // Only save if both IDs exist
+{
+  $result = db_query("INSERT INTO supercookie_sessions (`scid`, `uid`) VALUES (:scid, :uid) ON DUPLICATE KEY UPDATE `uid`=:uid;", array(
+    ':scid' => $supercookie->data,
+    ':uid' => $supercookie->uid
+  ));
+}
 ?>
