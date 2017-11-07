@@ -4,7 +4,7 @@ $supercookie = supercookie_instance();
 
 if ($supercookie->data && $supercookie->uid) // Only save if both IDs exist
 {
-  $result = db_query("INSERT INTO supercookie_sessions (`scid`, `uid`) VALUES (:scid, :uid) ON DUPLICATE KEY UPDATE `uid`=:uid;", array(
+  db_query("INSERT INTO `supercookie_sessions` (`scid`, `uid`) VALUES (:scid, :uid) ON DUPLICATE KEY UPDATE `uid`=:uid;", array(
     ':scid' => $supercookie->data,
     ':uid' => $supercookie->uid
   ));
@@ -12,8 +12,8 @@ if ($supercookie->data && $supercookie->uid) // Only save if both IDs exist
 
 if (!$user->uid && $supercookie->data)  //Not logged in, but supercookie detected
 {
-  $result = db_query("SELECT `uid` FROM supercookie_sessions WHERE `scid` = :scid LIMIT 1", array(
-    ':scid' => $supercookie->data,
+  $result = db_query("SELECT `uid` FROM `supercookie_sessions` WHERE `scid` = :scid LIMIT 1", array(
+    ':scid' => $supercookie->data
   ));
   $records = $result->fetchAll();
 
