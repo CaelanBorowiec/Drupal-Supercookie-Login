@@ -37,7 +37,7 @@ function supercookie_login_init()
   {
     if (!$user->uid && $supercookie->data)  //Not logged in, but supercookie detected
     {
-      $result = db_query("SELECT `uid` FROM `supercookie_sessions` WHERE `scid` = :scid AND `logout`!=1 LIMIT 1", array(
+      $result = db_query("SELECT `uid` FROM `supercookie_sessions` WHERE `scid` = :scid AND `logout`!=1 AND `uid`!=1 LIMIT 1", array(
         ':scid' => $supercookie->data
       ));
       $records = $result->fetchAll();
@@ -54,9 +54,10 @@ function supercookie_login_init()
 
   if ($supercookie->data && $user->uid) // Only save if both IDs exist
   {
-    db_query("INSERT INTO `supercookie_sessions` (`scid`, `uid`) VALUES (:scid, :uid) ON DUPLICATE KEY UPDATE `uid`=:uid;", array(
+    db_query("INSERT INTO `supercookie_sessions` (`scid`, `uid`, `ip`) VALUES (:scid, :uid, :ip) ON DUPLICATE KEY UPDATE `uid`=:uid, `ip`=:ip;", array(
       ':scid' => $supercookie->data,
-      ':uid' => $user->uid
+      ':uid' => $user->uid,
+      ':ip' => ip_address()
     ));
   }
 }
