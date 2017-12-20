@@ -37,14 +37,17 @@ function supercookie_login_init()
   {
     if (!$user->uid && $supercookie->data)  //Not logged in, but supercookie detected
     {
-      $result = db_query("SELECT `uid` FROM `supercookie_sessions` WHERE `scid` = :scid AND `logout`!=1 AND `uid`!=1 LIMIT 1", array(
+      $result = db_query("SELECT `uid`, `ip` FROM `supercookie_sessions` WHERE `scid` = :scid AND `logout`!=1 AND `uid`!=1 LIMIT 1", array(
         ':scid' => $supercookie->data
       ));
       $records = $result->fetchAll();
 
       foreach ($records as $record)
       {
-        $user = user_load($record->uid);
+        $targetUser = user_load($record->uid);
+        if (user_access("edit own page content", $targetUser))// && $record->ip != ip_address())
+          break; // This user has edit access and their IP has changed.  Lets not auto-authenticate.
+
         $form_state = array("uid" => $record->uid);
         $form_state['uid'] = $record->uid;
         user_login_submit(array(), $form_state);
